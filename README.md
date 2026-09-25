@@ -67,8 +67,7 @@ Binary classification: `Liked` ∈ {0, 1} from free-text `Review`.
 
 | File | Role |
 |------|------|
-| `01-text-features.ipynb` | How words become numbers (unigrams / bigrams) |
-| `02-sentiment-model.ipynb` | Full pipeline + predictions on new text |
+| `analysis.ipynb` | How text becomes numbers → train → evaluate → predict |
 
 ### Example
 ```python
@@ -90,7 +89,7 @@ model.predict(unseen_text)  # => [1] (positive)
 git clone https://github.com/47096/customer-sentiment.git
 cd customer-sentiment
 pip install -r requirements.txt
-jupyter notebook 02-sentiment-model.ipynb
+jupyter notebook analysis.ipynb
 ```
 
 Or open in Colab from the notebook file (no setup).

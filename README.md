@@ -1,108 +1,108 @@
-# Sentiment Prediction from Restaurant Reviews
+# What are customers actually saying?
 
-Classifying restaurant reviews as positive or negative using Support Vector Classification (SVC) — with text vectorisation via CountVectorizer.
+**A voice-of-customer problem, solved with review text.**
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wsamuelw/review-data-using-SVC/blob/main/2%2C%20review_data_using_SVC.ipynb)
+Teams read a handful of reviews and argue about “what people think.” I turn **raw customer language** into a clear **positive / negative read** you can use in product, marketing, and ops — without a research team.
 
-## Problem
+---
 
-Given 1,000 restaurant reviews with binary labels (liked / not liked), build a model that predicts sentiment from raw text. The challenge: converting free-form text into numerical features that an SVM can learn from.
+## The stake
 
-## Approach
+Reviews and tickets are free research — if someone has time to read them. Miss the negative patterns and you fix the wrong things. Squeaky voices dominate. **Silent majority sentiment** is where churn and word-of-mouth actually live.
 
-1. **Vectorise** text using `CountVectorizer` — converts words into a bag-of-words matrix with English stop words removed
-2. **Split** data 75/25 with stratified sampling
-3. **Train** an SVC (RBF kernel, default parameters)
-4. **Evaluate** accuracy on held-out test set
-5. **Test** on unseen custom text
+## The story
 
-## What's Inside
+You have **1,000 restaurant reviews** with a simple label: liked / not liked. The job is not “build an SVM.” The job is:
 
-| Notebook | What It Does |
-|----------|-------------|
-| `1, CountVectorizer_demo.ipynb` | Standalone demo of unigram and bigram vectorisation — how text becomes numbers |
-| `2, review_data_using_SVC.ipynb` | Full pipeline: load data → vectorise → train SVC → evaluate → predict on unseen text |
+> **Can we trust a model to say what customers feel — from free text alone?**
 
-## Results
+I built a full text pipeline: words → features → classifier → **predictions on brand-new sentences**.
 
-The model achieves strong accuracy on the test set. Class distribution is balanced (~50/50 positive/negative), so accuracy is a reliable metric here.
+**Outcome on this build:**
+- Balanced classes (~50/50), so accuracy is meaningful  
+- Model classifies **unseen review text** as positive or negative  
+- Same pattern works on **support tickets, app store reviews, NPS verbatims**
 
-Key output: the model can predict sentiment on completely unseen text:
+> **The commercial idea:** stop sampling five reviews and guessing. Score the corpus. Fix what the negatives are actually about.
 
+---
+
+## What that looks like in your world
+
+| You have | I turn it into |
+|----------|----------------|
+| Reviews / tickets / verbatims | **Sentiment scores** per comment |
+| “People seem unhappy lately” | Counts + examples you can act on |
+| Manual tag QA on a sample | **Scalable first-pass** triage for humans |
+| Dashboard of stars only | The **language** behind the stars |
+
+**Typical engagement:** we connect your review source → label a sample → train / tune → you get a scored export + the words driving negative sentiment.
+
+**[Talk to me about customer voice →](https://datafying.co/#contactus)** · [datafying](https://datafying.co/)
+
+---
+
+## Why marketing & product leaders bring me in
+
+- Starts from **business language** (“liked / not liked”), not jargon  
+- Shows the **text → numbers** step clients never see — so they trust the output  
+- Same pattern scales from restaurant reviews to **VoC programs**  
+- Honest limits (slang, sarcasm, domain shift) stated up front  
+
+---
+
+## Proof of craft *(technical)*
+
+### Job
+Binary classification: `Liked` ∈ {0, 1} from free-text `Review`.
+
+### Pipeline
+1. **Vectorise** — `CountVectorizer` (bag-of-words, English stop words dropped)  
+2. **Split** — 75/25, stratified  
+3. **Train** — SVC (RBF)  
+4. **Evaluate** — accuracy on holdout (balanced labels)  
+5. **Smoke test** — custom unseen sentences  
+
+### What's in the repo
+
+| File | Role |
+|------|------|
+| `01-text-features.ipynb` | How words become numbers (unigrams / bigrams) |
+| `02-sentiment-model.ipynb` | Full pipeline + predictions on new text |
+
+### Example
 ```python
 unseen_text = vect.transform(["Good customer service! The food was nice"])
 model.predict(unseen_text)  # => [1] (positive)
 ```
 
-## Setup
+### Limits (honesty)
+- Binary labels only (no star rating yet)  
+- Classic bag-of-words — weak on sarcasm and heavy slang  
+- Domain matters: retrain when you switch from restaurants to your product  
+- **Human review** still needed for edge cases and root-cause themes  
 
-### Google Colab
+---
 
-Click the badge above — no setup required.
-
-### Local
+## Reproduce
 
 ```bash
-pip install scikit-learn pandas matplotlib seaborn
-git clone https://github.com/wsamuelw/review-data-using-SVC.git
-cd review-data-using-SVC
-jupyter notebook "2, review_data_using_SVC.ipynb"
+git clone https://github.com/47096/customer-sentiment.git
+cd customer-sentiment
+pip install -r requirements.txt
+jupyter notebook 02-sentiment-model.ipynb
 ```
 
-## Data
+Or open in Colab from the notebook file (no setup).
 
-**Restaurant Reviews** — 1,000 reviews scraped from restaurant listings. Tab-separated with two columns:
+**Data:** 1,000 restaurant reviews (`Review` + `Liked`) in `data/`.
 
-| Column | Type | Description |
-|--------|------|------------|
-| `Review` | string | Free-text review |
-| `Liked` | int (0/1) | Binary sentiment label |
+**Stack:** `scikit-learn` · `pandas` · `CountVectorizer` · `SVC`
 
-Class distribution: ~50% positive, ~50% negative.
+---
 
-## How CountVectorizer Works
+## Next step
 
-Raw text → tokenise → remove stop words → build vocabulary → create word-count matrix:
+If reviews are piling up and the team is guessing — that is the engagement I run.
 
-```python
-from sklearn.feature_extraction.text import CountVectorizer
-
-corpus = ['Great food', 'Terrible service']
-vect = CountVectorizer(stop_words='english')
-X = vect.fit_transform(corpus)
-
-# Vocabulary: ['food', 'great', 'service', 'terrible']
-# Matrix: [[1, 1, 0, 0],
-#           [0, 0, 1, 1]]
-```
-
-Each row is a document, each column is a word in the vocabulary. The value is how many times that word appears.
-
-**Bigrams** (2-word phrases) capture context that single words miss:
-
-```python
-vect = CountVectorizer(ngram_range=(2, 2))
-# 'not good' → single feature, captures negation
-```
-
-## Why SVC for Text?
-
-- **Works well in high dimensions** — text vectors have thousands of features (one per word), SVMs handle this naturally
-- **Kernel trick** — RBF kernel captures non-linear relationships without explicit feature engineering
-- **Robust to overfitting** — margin maximisation generalises well on small-to-medium datasets
-
-## Tech Stack
-
-- **scikit-learn** — CountVectorizer, SVC, train_test_split, accuracy_score
-- **pandas** — data loading and manipulation
-- **matplotlib / seaborn** — class distribution visualisation
-
-## References
-
-- [SVM introduction](https://monkeylearn.com/blog/introduction-to-support-vector-machines-svm/)
-- [CountVectorizer docs](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html)
-- [Restaurant Reviews analysis](https://www.analyticsvidhya.com/blog/2022/02/restaurant-reviews-analysis-model-based-on-ml-algorithms/)
-
-## License
-
-MIT
+**[Book a conversation →](https://datafying.co/#contactus)** · Customer analytics & voice-of-customer · [datafying](https://datafying.co/)
